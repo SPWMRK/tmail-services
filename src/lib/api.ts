@@ -42,8 +42,11 @@ export async function getMessages(email: string, signal?: AbortSignal) {
   return messages;
 }
 
-export async function removeMessage(id: string) {
-  await call<{ ok: true }>(`/api/messages/${encodeURIComponent(id)}`, { method: "DELETE" });
+/** The server only deletes `id` if it belongs to `email`'s inbox. */
+export async function removeMessage(email: string, id: string) {
+  await call<{ ok: true }>(`/api/messages/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`, {
+    method: "DELETE",
+  });
 }
 
 /** User-facing text for any error thrown by the calls above. */

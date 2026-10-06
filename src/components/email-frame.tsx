@@ -20,6 +20,7 @@ function buildDocument(content: string, emptyText: string): string {
   return `<!doctype html><html><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="script-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
 <base target="_blank">
 <style>
   html{background:#fff;color:#1f2937}

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ApiError, getMessages, removeMessage } from "@/lib/api";
-import { detectService } from "@/lib/services";
 import { loadStringList, saveStringList } from "@/lib/storage";
 import type { TMailMessage } from "@/lib/tmail/types";
 
@@ -25,11 +24,6 @@ function toApiError(err: unknown): ApiError {
 
 function isAbort(err: unknown): boolean {
   return err instanceof DOMException && err.name === "AbortError";
-}
-
-/** The inbox only shows mail from supported services (iQIYI, WeTV, Disney+); other senders are ignored. */
-function supportedOnly(list: TMailMessage[]): TMailMessage[] {
-  return list.filter((m) => detectService(m.senderEmail) !== null);
 }
 
 function withAdded(set: Set<string>, ids: string[]): Set<string> {
@@ -58,7 +52,7 @@ interface Options {
 export function useInbox(email: string, { initialMessages, onNewMail }: Options = {}) {
   const online = useOnline();
 
-  const [messages, setMessages] = useState<TMailMessage[]>(() => supportedOnly(initialMessages ?? []));
+  const [messages, setMessages] = useState<TMailMessage[]>(() => initialMessages ?? []);
   const [status, setStatus] = useState<InboxStatus>(() => (initialMessages ? "ready" : "loading"));
   const [pollError, setPollError] = useState<ApiError | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -71,9 +65,7 @@ export function useInbox(email: string, { initialMessages, onNewMail }: Options 
   const [removingIds, setRemovingIds] = useState<Set<string>>(() => new Set());
 
   // Ids already seen; null until the first successful fetch.
-  const knownIdsRef = useRef<Set<string> | null>(
-    initialMessages ? new Set(supportedOnly(initialMessages).map((m) => m.id)) : null,
-  );
+  const knownIdsRef = useRef<Set<string> | null>(initialMessages ? new Set(initialMessages.map((m) => m.id)) : null);
   const onNewMailRef = useRef(onNewMail);
   useEffect(() => {
     onNewMailRef.current = onNewMail;
@@ -93,7 +85,8 @@ export function useInbox(email: string, { initialMessages, onNewMail }: Options 
         controller = new AbortController();
         setRefreshing(true);
         try {
-          const list = supportedOnly(await getMessages(email, controller.signal));
+          // The server already drops mail from unsupported senders.
+          const list = await getMessages(email, controller.signal);
           if (stopped) return;
 
           const known = knownIdsRef.current;
@@ -160,7 +153,7 @@ export function useInbox(email: string, { initialMessages, onNewMail }: Options 
   const remove = useCallback(
     async (id: string) => {
       try {
-        await removeMessage(id);
+        await removeMessage(email, id);
       } catch (err) {
         refresh();
         throw toApiError(err);
@@ -172,7 +165,7 @@ export function useInbox(email: string, { initialMessages, onNewMail }: Options 
         setRemovingIds((prev) => withRemoved(prev, [id]));
       }, REMOVE_ANIMATION_MS);
     },
-    [refresh],
+    [email, refresh],
   );
 
   return {

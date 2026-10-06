@@ -5,16 +5,16 @@ import { log } from "./logger";
 
 // What the browser sees for each failure. Upstream details stay in the server log.
 const RESPONSES: Record<TMailErrorCode, { status: number; message: string }> = {
-  INVALID_INPUT: { status: 400, message: "ข้อมูลที่ส่งมาไม่ถูกต้อง" },
-  NOT_FOUND: { status: 404, message: "ไม่พบข้อมูลที่ต้องการ" },
-  RATE_LIMITED: { status: 429, message: "มีการเรียกใช้งานถี่เกินไป กรุณารอสักครู่" },
-  TIMEOUT: { status: 504, message: "เซิร์ฟเวอร์อีเมลตอบช้าเกินไป กรุณาลองใหม่" },
-  NETWORK: { status: 502, message: "ติดต่อเซิร์ฟเวอร์อีเมลไม่ได้ กรุณาลองใหม่" },
-  UPSTREAM: { status: 502, message: "เซิร์ฟเวอร์อีเมลขัดข้อง กรุณาลองใหม่" },
-  INVALID_RESPONSE: { status: 502, message: "เซิร์ฟเวอร์อีเมลตอบกลับข้อมูลที่ไม่ถูกต้อง" },
+  INVALID_INPUT: { status: 400, message: "Please enter a valid email address." },
+  NOT_FOUND: { status: 404, message: "This inbox is currently unavailable." },
+  RATE_LIMITED: { status: 429, message: "Too many requests. Please wait a moment and try again." },
+  TIMEOUT: { status: 504, message: "The mail server is taking too long. Please try again." },
+  NETWORK: { status: 502, message: "Can't reach the mail server right now." },
+  UPSTREAM: { status: 502, message: "The mail server is having trouble. Please try again." },
+  INVALID_RESPONSE: { status: 502, message: "The mail server is having trouble. Please try again." },
   // Our own misconfiguration — don't tell the browser the key was rejected.
-  UNAUTHORIZED: { status: 500, message: "ระบบตั้งค่าไม่ถูกต้อง กรุณาแจ้งผู้ดูแล" },
-  CONFIG: { status: 500, message: "ระบบตั้งค่าไม่ถูกต้อง กรุณาแจ้งผู้ดูแล" },
+  UNAUTHORIZED: { status: 500, message: "Something went wrong on our side. Please try again later." },
+  CONFIG: { status: 500, message: "Something went wrong on our side. Please try again later." },
 };
 
 export interface ApiErrorBody {
@@ -30,6 +30,6 @@ export function errorResponse(err: unknown, overrides?: Partial<Record<TMailErro
   }
 
   log.error("Unexpected error", err);
-  const body: ApiErrorBody = { error: { code: "INTERNAL", message: "เกิดข้อผิดพลาดที่ไม่คาดคิด" } };
+  const body: ApiErrorBody = { error: { code: "INTERNAL", message: "Something went wrong. Please try again." } };
   return Response.json(body, { status: 500 });
 }
