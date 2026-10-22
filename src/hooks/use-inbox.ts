@@ -2,16 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ApiError, getMessages, removeMessage } from "@/lib/api";
+import { ApiError, getMessages } from "@/lib/api";
 import { loadStringList, saveStringList } from "@/lib/storage";
 import type { TMailMessage } from "@/lib/tmail/types";
 
 import { useOnline } from "./use-environment";
 
-export const POLL_MS = 10_000;
+const POLL_MS = 10_000;
 const RATE_LIMITED_POLL_MS = 30_000;
 const FRESH_MS = 6_000;
-export const REMOVE_ANIMATION_MS = 220;
 const MAX_READ_IDS = 500;
 const STORAGE_READ = "tmail:read";
 
@@ -46,7 +45,7 @@ interface Options {
 }
 
 /**
- * State and behavior of one inbox: polling, read/unread, delete.
+ * State and behavior of one inbox: polling and read/unread. Customers can't delete mail.
  * The caller keys this by email, so switching inboxes starts fresh.
  */
 export function useInbox(email: string, { initialMessages, onNewMail }: Options = {}) {
@@ -62,7 +61,6 @@ export function useInbox(email: string, { initialMessages, onNewMail }: Options 
 
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set(loadStringList(STORAGE_READ)));
   const [freshIds, setFreshIds] = useState<Set<string>>(() => new Set());
-  const [removingIds, setRemovingIds] = useState<Set<string>>(() => new Set());
 
   // Ids already seen; null until the first successful fetch.
   const knownIdsRef = useRef<Set<string> | null>(initialMessages ? new Set(initialMessages.map((m) => m.id)) : null);
@@ -149,25 +147,6 @@ export function useInbox(email: string, { initialMessages, onNewMail }: Options 
     });
   }, []);
 
-  /** Throws ApiError on failure (and resyncs the list). */
-  const remove = useCallback(
-    async (id: string) => {
-      try {
-        await removeMessage(email, id);
-      } catch (err) {
-        refresh();
-        throw toApiError(err);
-      }
-      // Play the collapse animation, then drop the row.
-      setRemovingIds((prev) => withAdded(prev, [id]));
-      setTimeout(() => {
-        setMessages((prev) => prev.filter((m) => m.id !== id));
-        setRemovingIds((prev) => withRemoved(prev, [id]));
-      }, REMOVE_ANIMATION_MS);
-    },
-    [email, refresh],
-  );
-
   return {
     online,
     messages,
@@ -177,9 +156,7 @@ export function useInbox(email: string, { initialMessages, onNewMail }: Options 
     lastChecked,
     readIds,
     freshIds,
-    removingIds,
     refresh,
     setRead,
-    remove,
   };
 }

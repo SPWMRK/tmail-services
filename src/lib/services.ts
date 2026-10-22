@@ -1,7 +1,7 @@
 // Services whose emails this inbox is meant to receive, recognized by sender.
 
 export interface Service {
-  id: "iqiyi" | "wetv" | "disney";
+  id: "iqiyi" | "wetv" | "disney" | "mangotv" | "youku";
   name: string;
   /** Exact sender addresses (lowercase). */
   senders: string[];
@@ -12,12 +12,9 @@ export interface Service {
 export const SERVICES: Service[] = [
   { id: "iqiyi", name: "iQIYI", senders: ["no_reply_intl@iq.com"], domains: ["iq.com", "iqiyi.com"] },
   { id: "wetv", name: "WeTV", senders: ["service@mail.wetv.vip"], domains: ["wetv.vip"] },
-  {
-    id: "disney",
-    name: "Disney+",
-    senders: ["disneyplus@trx.mail2.disneyplus.com"],
-    domains: ["disneyplus.com"],
-  },
+  { id: "disney",name: "Disney+",senders: ["disneyplus@trx.mail2.disneyplus.com"],domains: ["disneyplus.com"],},
+  { id: "mangotv", name: "MangoTV", senders: ["noreply@tran-al.mgtv.com"], domains: ["mgtv.com"] },
+  { id: "youku", name: "Youku", senders: ["service@notice.alibaba.com"], domains: ["youku.com"] },
 ];
 
 export function detectService(senderEmail: string): Service | null {

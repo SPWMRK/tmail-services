@@ -28,7 +28,7 @@ function buildDocument(content: string, emptyText: string): string {
   img,video{max-width:100%;height:auto}
   table{max-width:100%}
   pre{white-space:pre-wrap}
-  a{color:#4f46e5}
+  a{color:#c2410c}
 </style></head><body>${body}</body></html>`;
 }
 
@@ -63,7 +63,7 @@ export function EmailFrame({ html, title, emptyText }: { html: string; title: st
   }, [srcDoc]);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-line bg-white">
+    <div className="relative overflow-hidden rounded-xl border border-line bg-white">
       {!loaded && (
         <div className="absolute inset-0 space-y-3 bg-white p-5" aria-hidden="true">
           <div className="skeleton h-4 w-3/4" />

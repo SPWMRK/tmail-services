@@ -6,9 +6,7 @@ import { log } from "./logger";
 import type { TMailMessage } from "./types";
 import { isEmail, parseDomains, parseEmail, parseMessages } from "./validate";
 
-type Method = "GET" | "DELETE";
-
-const MESSAGE_ID_RE = /^[\w.-]{1,128}$/;
+type Method = "GET";
 
 /**
  * Calls `{baseUrl}/api/{...segments}/{apiKey}`. Every TMail endpoint has this shape,
@@ -132,15 +130,4 @@ export async function fetchMessages(email: string): Promise<TMailMessage[]> {
 
   const body = await request("GET", ["messages", address]);
   return validated(body, () => parseMessages(parseJson(body, "messages")));
-}
-
-/**
- * Deletes one message. Note: TMail answers HTTP 500 for an id that doesn't exist
- * (e.g. already deleted), which surfaces here as an UPSTREAM error.
- */
-export async function deleteMessage(messageId: string): Promise<void> {
-  const id = messageId.trim();
-  if (!MESSAGE_ID_RE.test(id)) throw new TMailError("INVALID_INPUT", "Invalid message id");
-
-  await request("DELETE", ["message", id]);
 }

@@ -36,12 +36,22 @@ export function useRouteEmail(): string | null {
   return useSyncExternalStore(subscribe, readEmail, () => null);
 }
 
+/** Keeps ?lang= when switching screens. */
+function urlFor(email: string | null): string {
+  const params = new URLSearchParams();
+  if (email) params.set("email", email);
+  const lang = new URLSearchParams(window.location.search).get("lang");
+  if (lang) params.set("lang", lang);
+  const query = params.toString();
+  return query ? `?${query}` : window.location.pathname;
+}
+
 export function goToInbox(email: string) {
-  window.history.pushState({}, "", `?email=${encodeURIComponent(email)}`);
+  window.history.pushState({}, "", urlFor(email));
   window.dispatchEvent(new Event(EVENT));
 }
 
 export function goToLanding() {
-  window.history.pushState({}, "", window.location.pathname);
+  window.history.pushState({}, "", urlFor(null));
   window.dispatchEvent(new Event(EVENT));
 }

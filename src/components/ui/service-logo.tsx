@@ -19,6 +19,19 @@ const STYLE: Record<Service["id"], { background: string; mark: React.ReactNode }
       </span>
     ),
   },
+  mangotv: {
+    background: "linear-gradient(135deg, #ffa31a, #ff6a00)",
+    mark: (
+      <span className="flex flex-col items-center text-[9.5px] leading-[1.05] font-extrabold tracking-tight">
+        <span>Mango</span>
+        <span>TV</span>
+      </span>
+    ),
+  },
+  youku: {
+    background: "linear-gradient(135deg, #2fb4ff, #1f5bff)",
+    mark: <span className="text-[10.5px] font-extrabold tracking-tight">Youku</span>,
+  },
 };
 
 export function ServiceLogo({ service, size = "md", className }: { service: Service; size?: "sm" | "md" | "lg"; className?: string }) {

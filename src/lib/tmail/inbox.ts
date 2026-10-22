@@ -2,7 +2,7 @@ import "server-only";
 
 import { detectService } from "@/lib/services";
 
-import { deleteMessage, fetchMessages, listDomains } from "./client";
+import { fetchMessages, listDomains } from "./client";
 import { TMailError } from "./errors";
 import { log } from "./logger";
 import type { TMailMessage } from "./types";
@@ -10,8 +10,8 @@ import { isEmail } from "./validate";
 
 // Rules enforced on the server for every inbox request:
 //  1. the address must be on a domain TMail actually hosts;
-//  2. only mail from supported services (src/lib/services.ts) ever leaves the server;
-//  3. a message can only be deleted through the inbox it belongs to.
+//  2. only mail from supported services (src/lib/services.ts) ever leaves the server.
+// Customers can read their inbox but not delete or send, so there is no delete here.
 
 const DOMAINS_TTL_MS = 10 * 60_000;
 
@@ -49,13 +49,4 @@ export async function supportedMessages(email: string): Promise<TMailMessage[]> 
     log.debug(`Hid ${all.length - supported.length} message(s) from unsupported senders`);
   }
   return supported;
-}
-
-/** Deletes a message, but only if it is a supported message in `email`'s inbox. */
-export async function deleteFromInbox(email: string, messageId: string): Promise<void> {
-  const messages = await supportedMessages(email);
-  if (!messages.some((m) => m.id === messageId)) {
-    throw new TMailError("NOT_FOUND", "Message is not in this inbox");
-  }
-  await deleteMessage(messageId);
 }
