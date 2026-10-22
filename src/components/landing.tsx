@@ -87,7 +87,7 @@ export function Landing({ onAccess }: { onAccess: (email: string, messages: TMai
   return (
     <div
       className={cx(
-        "mx-auto grid w-full max-w-6xl animate-screen-in gap-8 px-4 pb-16 pt-10 sm:px-6",
+        "mx-auto grid w-full max-w-6xl gap-8 px-4 pb-16 pt-10 sm:px-6",
         "lg:my-auto lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-16 lg:gap-y-10 lg:py-16",
       )}
     >

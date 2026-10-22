@@ -1,8 +1,9 @@
 "use client";
 
 // The page language. Order: ?lang= in the URL (so the seller can send a link in either
-// language), then the customer's last choice, then the browser language, then Thai.
-// The server always renders Thai; the client switches after hydration.
+// language), then the customer's last choice, then Thai. The browser language is ignored
+// on purpose: the server renders Thai, and switching after hydration flashes the page and
+// pushes back Largest Contentful Paint.
 import { useSyncExternalStore } from "react";
 
 import { COPY, type Copy, type Lang } from "./copy";
@@ -20,9 +21,7 @@ function readLang(): Lang {
   const fromUrl = new URLSearchParams(window.location.search).get("lang");
   if (isLang(fromUrl)) return fromUrl;
   const saved = loadString(STORAGE_LANG);
-  if (isLang(saved)) return saved;
-  const browser = navigator.languages.map((l) => l.slice(0, 2).toLowerCase()).find(isLang);
-  return browser ?? DEFAULT_LANG;
+  return isLang(saved) ? saved : DEFAULT_LANG;
 }
 
 function subscribe(onChange: () => void) {
