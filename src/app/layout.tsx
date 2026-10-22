@@ -20,6 +20,7 @@ const plexThai = IBM_Plex_Sans_Thai({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 // Thai, because link previews (e.g. in LINE) show this text and most customers read Thai.
