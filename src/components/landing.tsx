@@ -1,18 +1,19 @@
 "use client";
 
-import { ArrowRight, CircleAlert, History, Mail, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, CircleAlert, History, Mail, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { errorText, getDomains, getMessages } from "@/lib/api";
-import { copy } from "@/lib/copy";
+import { fmt } from "@/lib/copy";
 import { cx } from "@/lib/cx";
+import { useCopy } from "@/lib/lang";
 import { isEmail, normalizeEmail } from "@/lib/route";
 import { SERVICES } from "@/lib/services";
 import { loadString, saveString } from "@/lib/storage";
 import type { TMailMessage } from "@/lib/tmail/types";
 
 import { button } from "./ui/button";
-import { HeroIllustration, Spinner } from "./ui/graphics";
+import { Spinner } from "./ui/graphics";
 import { ServiceLogo } from "./ui/service-logo";
 
 const LAST_EMAIL = "tmail:last-email";
@@ -28,7 +29,13 @@ function useLastEmail(): string | null {
   );
 }
 
+/**
+ * Home: headline and supported services on the left, the email form on the right.
+ * Phones stack it as headline, form, services. On success the form hands the fetched
+ * messages to the inbox so the inbox opens filled.
+ */
 export function Landing({ onAccess }: { onAccess: (email: string, messages: TMailMessage[]) => void }) {
+  const t = useCopy();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [shaking, setShaking] = useState(false);
@@ -55,8 +62,8 @@ export function Landing({ onAccess }: { onAccess: (email: string, messages: TMai
 
   async function access(raw: string) {
     const email = normalizeEmail(raw);
-    if (!email) return fail(copy.landing.errors.empty);
-    if (!isEmail(email)) return fail(copy.landing.errors.invalid);
+    if (!email) return fail(t.landing.errors.empty);
+    if (!isEmail(email)) return fail(t.landing.errors.invalid);
 
     setError(null);
     setSubmitting(true);
@@ -64,31 +71,33 @@ export function Landing({ onAccess }: { onAccess: (email: string, messages: TMai
       const domains = await (domainsRef.current ?? Promise.resolve(null));
       if (domains && !domains.includes(email.split("@")[1])) {
         setSubmitting(false);
-        return fail(copy.landing.errors.unsupported);
+        return fail(t.landing.errors.unsupported);
       }
       const messages = await getMessages(email);
       saveString(LAST_EMAIL, email);
       onAccess(email, messages);
     } catch (err) {
       setSubmitting(false);
-      fail(errorText(err));
+      fail(errorText(err, t));
     }
   }
 
-  const showContinue = !!lastEmail && !submitting && normalizeEmail(value) !== lastEmail;
+  const showRecent = !!lastEmail && normalizeEmail(value) !== lastEmail;
 
   return (
-    <div className="relative mx-auto flex w-full max-w-xl animate-screen-in flex-col items-center px-4 pb-16 pt-4 text-center sm:pt-10">
-      <HeroIllustration className="h-36 w-auto sm:h-44" />
-
-      <p className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface/70 px-3 py-1 text-xs font-medium text-muted backdrop-blur">
-        <ShieldCheck className="size-3.5 text-accent" aria-hidden="true" />
-        {copy.landing.eyebrow}
-      </p>
-      <h1 className="mt-4 text-[30px] font-semibold leading-tight tracking-tight text-balance sm:text-[42px]">
-        {copy.landing.title}
-      </h1>
-      <p className="mt-2 text-[15px] text-muted text-pretty sm:text-base">{copy.landing.subtitle}</p>
+    <div
+      className={cx(
+        "mx-auto grid w-full max-w-6xl animate-screen-in gap-8 px-4 pb-16 pt-10 sm:px-6",
+        "lg:my-auto lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-16 lg:gap-y-10 lg:py-16",
+      )}
+    >
+      <div className="lg:self-end">
+        <p className="eyebrow text-accent">{t.landing.eyebrow}</p>
+        <h1 className="mt-3 max-w-xl text-[34px] font-semibold leading-[1.15] tracking-tight text-balance sm:text-5xl lg:text-[56px]">
+          {t.landing.title}
+        </h1>
+        <p className="mt-4 max-w-md text-base text-muted text-pretty sm:text-lg">{t.landing.subtitle}</p>
+      </div>
 
       <form
         noValidate
@@ -96,27 +105,21 @@ export function Landing({ onAccess }: { onAccess: (email: string, messages: TMai
           e.preventDefault();
           access(value);
         }}
-        className="relative mt-8 w-full overflow-hidden rounded-[28px] border border-line bg-surface/85 p-4 text-left shadow-card backdrop-blur-xl sm:p-5"
+        className="rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-7 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center"
       >
-        {submitting && (
-          <span className="absolute inset-x-0 top-0 h-0.5 overflow-hidden" aria-hidden="true">
-            <span className="block h-full w-1/3 animate-progress rounded-full bg-gradient-to-r from-accent to-sky" />
-          </span>
-        )}
-
-        <label htmlFor={inputId} className="mb-2 block text-sm font-medium">
-          {copy.landing.label}
+        <label htmlFor={inputId} className="mb-2 block text-[15px] font-medium">
+          {t.landing.label}
         </label>
         <div
           onAnimationEnd={(e) => e.target === e.currentTarget && setShaking(false)}
           className={cx(
-            "glow-field flex items-center rounded-2xl border bg-surface-2 transition-[border-color,background-color,box-shadow] duration-200",
-            "focus-within:border-transparent focus-within:bg-surface focus-within:shadow-[0_0_0_4px_var(--accent-soft)]",
-            error ? "border-danger" : "border-line",
+            "flex items-center rounded-xl border bg-surface transition-[border-color,box-shadow] duration-150",
+            "focus-within:border-accent focus-within:ring-4 focus-within:ring-accent-soft",
+            error ? "border-danger" : "border-line-strong",
             shaking && "animate-shake",
           )}
         >
-          <Mail className={cx("ml-4 size-5 shrink-0 transition-colors", error ? "text-danger" : "text-muted")} aria-hidden="true" />
+          <Mail className={cx("ml-4 size-5 shrink-0", error ? "text-danger" : "text-muted")} aria-hidden="true" />
           <input
             ref={inputRef}
             id={inputId}
@@ -127,7 +130,7 @@ export function Landing({ onAccess }: { onAccess: (email: string, messages: TMai
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="go"
-            placeholder={copy.landing.placeholder}
+            placeholder={t.landing.placeholder}
             value={value}
             disabled={submitting}
             onChange={(e) => {
@@ -136,7 +139,7 @@ export function Landing({ onAccess }: { onAccess: (email: string, messages: TMai
             }}
             aria-invalid={!!error}
             aria-describedby={helpId}
-            className="h-14 min-w-0 flex-1 bg-transparent px-3 text-base outline-none placeholder:text-muted disabled:opacity-70 sm:text-[17px]"
+            className="h-[52px] min-w-0 flex-1 bg-transparent px-3 text-base outline-none placeholder:text-muted disabled:opacity-70 sm:text-[17px]"
           />
           {value && !submitting && (
             <button
@@ -146,83 +149,80 @@ export function Landing({ onAccess }: { onAccess: (email: string, messages: TMai
                 setError(null);
                 inputRef.current?.focus();
               }}
-              aria-label={copy.landing.clear}
-              className="mr-2 flex size-9 shrink-0 animate-pop-in cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-3 hover:text-ink"
+              aria-label={t.landing.clear}
+              className="mr-1.5 flex size-10 shrink-0 animate-pop-in cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
           )}
         </div>
 
-        <div id={helpId} className="mt-2 min-h-5 text-sm">
+        <div id={helpId} className="mt-2 min-h-6 text-sm">
           {error ? (
             <p role="alert" className="flex items-start gap-1.5 text-danger">
               <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
               {error}
             </p>
           ) : (
-            <p className="text-muted">{copy.landing.hint}</p>
+            <p className="text-muted">{t.landing.hint}</p>
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className={button({ variant: "primary", size: "lg" }, "group mt-4 h-14 w-full text-base disabled:opacity-90")}
-        >
+        <button type="submit" disabled={submitting} className={button({ variant: "primary", size: "lg" }, "group mt-4 h-[52px] w-full disabled:opacity-90")}>
           {submitting ? (
             <>
               <Spinner className="size-5" />
-              {copy.landing.submitting}
+              {t.landing.submitting}
             </>
           ) : (
             <>
-              {copy.landing.submit}
-              <ArrowRight className="size-5 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
+              {t.landing.submit}
+              <ArrowRight className="size-[18px] transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
             </>
           )}
         </button>
 
-        {showContinue && (
-          <button
-            type="button"
-            onClick={() => {
-              setValue(lastEmail);
-              access(lastEmail);
-            }}
-            className="mt-3 flex w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-ink"
-          >
-            <History className="size-4 shrink-0" aria-hidden="true" />
-            <span className="truncate">
-              {copy.landing.continueWith.split("{email}")[0]}
-              <span className="font-mono text-ink">{lastEmail}</span>
-            </span>
-            <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
-          </button>
+        {showRecent && (
+          <div className="mt-6 border-t border-line pt-5">
+            <p className="eyebrow">{t.landing.recent}</p>
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => {
+                setValue(lastEmail);
+                access(lastEmail);
+              }}
+              aria-label={fmt(t.landing.continueWith, { email: lastEmail })}
+              className={cx(
+                "group mt-2 flex min-h-12 w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-line px-3.5 py-2.5 text-left",
+                "transition-colors hover:border-accent-line hover:bg-accent-soft disabled:pointer-events-none disabled:opacity-60",
+              )}
+            >
+              <History className="size-[18px] shrink-0 text-muted group-hover:text-accent" aria-hidden="true" />
+              <span className="min-w-0 flex-1 truncate font-mono text-[15px]">{lastEmail}</span>
+              <ArrowRight className="size-4 shrink-0 text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden="true" />
+            </button>
+          </div>
         )}
         <span className="sr-only" aria-live="polite">
-          {submitting ? copy.landing.submitting : ""}
+          {submitting ? t.landing.submitting : ""}
         </span>
       </form>
 
-      <section aria-labelledby={servicesId} className="mt-10 w-full">
-        <h2 id={servicesId} className="text-xs font-semibold uppercase tracking-wider text-muted">
-          {copy.landing.servicesTitle}
+      <section aria-labelledby={servicesId} className="lg:self-start">
+        <h2 id={servicesId} className="eyebrow">
+          {t.landing.servicesTitle}
         </h2>
-        <ul className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+        <ul className="mt-3 flex flex-wrap gap-2">
           {SERVICES.map((service) => (
-            <li
-              key={service.id}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-surface/70 px-2 py-4 backdrop-blur"
-            >
-              <ServiceLogo service={service} />
-              <span className="text-sm font-medium">{service.name}</span>
+            <li key={service.id} className="flex items-center gap-2.5 rounded-xl border border-line bg-surface py-1.5 pl-1.5 pr-3.5">
+              <ServiceLogo service={service} size="sm" />
+              <span className="text-[15px] font-medium">{service.name}</span>
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-xs text-muted">{copy.landing.servicesCaption}</p>
+        <p className="mt-3 max-w-md text-sm text-muted">{t.landing.servicesCaption}</p>
       </section>
     </div>
   );
 }
-

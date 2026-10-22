@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { copy } from "@/lib/copy";
+import { useCopy, useLang } from "@/lib/lang";
 import { goToInbox, useRouteEmail } from "@/lib/route";
 import type { TMailMessage } from "@/lib/tmail/types";
 
@@ -12,12 +12,18 @@ import { Landing } from "./landing";
 /** Landing (enter an email) ⇄ Inbox, driven by ?email= in the URL. */
 export function App() {
   const email = useRouteEmail();
+  const lang = useLang();
+  const t = useCopy();
   // Messages fetched while accessing, so the inbox opens already filled.
   const [handoff, setHandoff] = useState<{ email: string; messages: TMailMessage[] } | null>(null);
 
   useEffect(() => {
-    if (!email) document.title = copy.meta.title;
-  }, [email]);
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  useEffect(() => {
+    if (!email) document.title = t.meta.title;
+  }, [email, t]);
 
   if (email) {
     return <InboxScreen key={email} email={email} initialMessages={handoff?.email === email ? handoff.messages : undefined} />;

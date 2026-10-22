@@ -6,8 +6,7 @@ export default function Home() {
   return (
     <>
       <SiteHeader />
-      <main className="relative flex-1">
-        <div className="aurora" aria-hidden="true" />
+      <main className="flex flex-1 flex-col">
         <App />
       </main>
       <SiteFooter />

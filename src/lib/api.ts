@@ -1,5 +1,5 @@
 // Browser-side calls to our own /api routes (which talk to TMail on the server).
-import { copy } from "./copy";
+import type { Copy } from "./copy";
 import type { TMailMessage } from "./tmail/types";
 
 export class ApiError extends Error {
@@ -19,13 +19,13 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     res = await fetch(path, { cache: "no-store", ...init });
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err;
-    throw new ApiError(copy.errors.OFFLINE, "OFFLINE", 0);
+    throw new ApiError("Network request failed", "OFFLINE", 0);
   }
 
   const data: unknown = await res.json().catch(() => null);
   if (!res.ok) {
     const err = (data as { error?: { code?: string; message?: string } } | null)?.error;
-    throw new ApiError(err?.message ?? copy.errors.generic, err?.code ?? "UNKNOWN", res.status);
+    throw new ApiError(err?.message ?? `HTTP ${res.status}`, err?.code ?? "UNKNOWN", res.status);
   }
   return data as T;
 }
@@ -42,15 +42,8 @@ export async function getMessages(email: string, signal?: AbortSignal) {
   return messages;
 }
 
-/** The server only deletes `id` if it belongs to `email`'s inbox. */
-export async function removeMessage(email: string, id: string) {
-  await call<{ ok: true }>(`/api/messages/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`, {
-    method: "DELETE",
-  });
-}
-
-/** User-facing text for any error thrown by the calls above. */
-export function errorText(err: unknown): string {
-  if (err instanceof ApiError && err.code in copy.errors) return copy.errors[err.code as keyof typeof copy.errors];
-  return copy.errors.generic;
+/** User-facing text for any error thrown by the calls above, in the current language. */
+export function errorText(err: unknown, t: Copy): string {
+  if (err instanceof ApiError && err.code in t.errors) return t.errors[err.code as keyof Copy["errors"]];
+  return t.errors.generic;
 }

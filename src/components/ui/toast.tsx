@@ -4,7 +4,7 @@ import { CircleAlert, Mail, X } from "lucide-react";
 import { useSyncExternalStore } from "react";
 
 import { cx } from "@/lib/cx";
-import { copy } from "@/lib/copy";
+import { useCopy } from "@/lib/lang";
 
 import { AnimatedCheck } from "./graphics";
 
@@ -84,6 +84,7 @@ function ToneIcon({ tone }: { tone: Tone }) {
 }
 
 export function Toaster() {
+  const t = useCopy();
   const items = useToasts();
 
   return (
@@ -108,7 +109,7 @@ export function Toaster() {
           <button
             type="button"
             onClick={() => dismiss(item.id)}
-            aria-label={copy.toast.dismiss}
+            aria-label={t.toast.dismiss}
             className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
           >
             <X className="size-4" aria-hidden="true" />

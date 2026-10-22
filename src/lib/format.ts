@@ -1,22 +1,21 @@
-const LOCALE = "en-US";
-
-export function relativeTime(ms: number, now: number, justNow: string): string {
+/** `locale` and `justNow` come from the current language's copy. */
+export function relativeTime(ms: number, now: number, locale: string, justNow: string): string {
   const sec = Math.round((ms - now) / 1000);
   const abs = Math.abs(sec);
   if (abs < 45) return justNow;
-  const rtf = new Intl.RelativeTimeFormat(LOCALE, { numeric: "auto", style: "short" });
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "short" });
   if (abs < 3600) return rtf.format(Math.round(sec / 60), "minute");
   if (abs < 86400) return rtf.format(Math.round(sec / 3600), "hour");
   if (abs < 86400 * 7) return rtf.format(Math.round(sec / 86400), "day");
-  return new Intl.DateTimeFormat(LOCALE, { day: "numeric", month: "short" }).format(ms);
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(ms);
 }
 
-export function fullTime(ms: number): string {
-  return new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeStyle: "short" }).format(ms);
+export function fullTime(ms: number, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(ms);
 }
 
-export function clockTime(ms: number): string {
-  return new Intl.DateTimeFormat(LOCALE, { timeStyle: "medium" }).format(ms);
+export function clockTime(ms: number, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { timeStyle: "medium" }).format(ms);
 }
 
 export function initials(name: string): string {
