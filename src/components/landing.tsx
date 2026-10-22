@@ -213,11 +213,18 @@ export function Landing({ onAccess }: { onAccess: (email: string, messages: TMai
         <h2 id={servicesId} className="eyebrow">
           {t.landing.servicesTitle}
         </h2>
-        <ul className="mt-3 flex flex-wrap gap-2">
+        {/* Phones: equal tiles in a 3-column grid (logo over name). Wider screens: chips that wrap. */}
+        <ul className="mt-3 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
           {SERVICES.map((service) => (
-            <li key={service.id} className="flex items-center gap-2.5 rounded-xl border border-line bg-surface py-1.5 pl-1.5 pr-3.5">
+            <li
+              key={service.id}
+              className={cx(
+                "flex min-w-0 flex-col items-center gap-1.5 rounded-xl border border-line bg-surface px-2 py-3",
+                "sm:flex-row sm:gap-2.5 sm:py-1.5 sm:pl-1.5 sm:pr-3.5",
+              )}
+            >
               <ServiceLogo service={service} size="sm" />
-              <span className="text-[15px] font-medium">{service.name}</span>
+              <span className="max-w-full truncate text-[13px] font-medium sm:text-[15px]">{service.name}</span>
             </li>
           ))}
         </ul>
